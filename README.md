@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-C++ Tuya WiFi MQTT bridge with Home Assistant auto-discovery. Controls Tuya WiFi devices locally over the LAN -- no cloud, no Python, 2 MB memory.
+C++ Tuya WiFi MQTT bridge with Home Assistant auto-discovery. Controls Tuya WiFi devices locally over the LAN. 2 MB memory.
 
 Built on [nanotuya](https://github.com/hms-homelab/nanotuya), the C++ Tuya local protocol library.
 
