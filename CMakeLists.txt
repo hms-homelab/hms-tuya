@@ -31,14 +31,30 @@ endif()
 
 # ── Dependencies ──
 find_package(OpenSSL REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP REQUIRED jsoncpp)
+
+# Find jsoncpp: try pkg-config first (Linux), fall back to find_package (vcpkg/Windows)
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(JSONCPP jsoncpp)
+endif()
+if(NOT JSONCPP_FOUND)
+    find_package(jsoncpp CONFIG REQUIRED)
+    set(JSONCPP_LIBRARIES jsoncpp_lib)
+    set(JSONCPP_INCLUDE_DIRS "")
+endif()
+
 find_package(yaml-cpp REQUIRED)
 find_package(CURL REQUIRED)
 
 # Paho MQTT
-find_library(PAHO_MQTTPP3 paho-mqttpp3 REQUIRED)
-find_library(PAHO_MQTT3AS paho-mqtt3as REQUIRED)
+if(MSVC)
+    find_package(PahoMqttCpp CONFIG REQUIRED)
+    set(PAHO_MQTT_LIBS PahoMqttCpp::paho-mqttpp3)
+else()
+    find_library(PAHO_MQTTPP3 paho-mqttpp3 REQUIRED)
+    find_library(PAHO_MQTT3AS paho-mqtt3as REQUIRED)
+    set(PAHO_MQTT_LIBS ${PAHO_MQTTPP3} ${PAHO_MQTT3AS})
+endif()
 
 # ── Optional Drogon web UI ──
 option(BUILD_WITH_WEB "Build with Drogon web UI" ON)
@@ -72,8 +88,7 @@ target_include_directories(hms_tuya PRIVATE
 target_link_libraries(hms_tuya
     nanotuya
     yaml-cpp
-    ${PAHO_MQTTPP3}
-    ${PAHO_MQTT3AS}
+    ${PAHO_MQTT_LIBS}
     ${JSONCPP_LIBRARIES}
     OpenSSL::Crypto
     CURL::libcurl
