@@ -34,6 +34,7 @@ jobs:
             libpaho-mqtt-dev libpaho-mqttpp-dev \
             libcurl4-openssl-dev libdrogon-dev \
             uuid-dev libhiredis-dev libbrotli-dev zlib1g-dev \
+            libmariadb-dev libsqlite3-dev libpq-dev \
             libgtest-dev libgmock-dev
 
       - name: Build hms-tuya
