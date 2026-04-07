@@ -103,21 +103,15 @@ int main(int argc, char* argv[]) {
     // SPA fallback: return index.html for non-API 404s
     auto spa_fallback = index_html;
     drogon::app().setCustomErrorHandler(
-        [spa_fallback](drogon::HttpStatusCode code,
-                       const drogon::HttpRequestPtr& req) -> drogon::HttpResponsePtr {
-            if (code == drogon::k404NotFound) {
-                auto path = req->path();
-                if (path.find("/api/") == std::string::npos &&
-                    path.find("/health") == std::string::npos &&
-                    !spa_fallback.empty()) {
-                    auto resp = drogon::HttpResponse::newHttpResponse();
-                    resp->setStatusCode(drogon::k200OK);
-                    resp->setContentTypeCode(drogon::CT_TEXT_HTML);
-                    resp->setBody(spa_fallback);
-                    return resp;
-                }
+        [spa_fallback](drogon::HttpStatusCode code) -> drogon::HttpResponsePtr {
+            if (code == drogon::k404NotFound && !spa_fallback.empty()) {
+                auto resp = drogon::HttpResponse::newHttpResponse();
+                resp->setStatusCode(drogon::k200OK);
+                resp->setContentTypeCode(drogon::CT_TEXT_HTML);
+                resp->setBody(spa_fallback);
+                return resp;
             }
-            return nullptr;  // use default error page
+            return nullptr;
         });
 
     std::cout << "Web UI on port " << app.server_port << std::endl;
