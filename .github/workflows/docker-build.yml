@@ -99,7 +99,10 @@ jobs:
             -f visibility=public || echo "Could not set visibility (may need org admin token)"
 
   # ── Windows Build ─────────────────────────────────────────────────
+  # Disabled: nanotuya uses POSIX sockets — needs Winsock abstraction for Windows
+  # TODO: Add #ifdef _WIN32 / winsock2.h support to nanotuya::TuyaDevice
   windows-build:
+    if: false  # disabled until nanotuya supports Winsock
     runs-on: windows-latest
     continue-on-error: true
     permissions:
@@ -147,7 +150,7 @@ jobs:
   # ── GitHub Release (on tag push) ──────────────────────────────────
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-and-test, windows-build]
+    needs: [build-and-test]
     runs-on: ubuntu-latest
     permissions:
       contents: write
