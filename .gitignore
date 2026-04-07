@@ -1,0 +1,11 @@
+build/
+cmake-build-*/
+.idea/
+.vscode/
+*.o
+*.a
+*.so
+compile_commands.json
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/

@@ -1,0 +1,19 @@
+[Unit]
+Description=HMS-Tuya Bridge (Tuya WiFi local control via MQTT)
+After=network.target emqx.service
+Wants=emqx.service
+
+[Service]
+Type=simple
+User=aamat
+Group=aamat
+WorkingDirectory=/home/aamat/maestro_hub/projects/hms-tuya
+ExecStart=/usr/local/bin/hms_tuya --config /etc/hms-tuya/hms-tuya.yaml
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

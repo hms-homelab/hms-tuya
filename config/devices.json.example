@@ -1,0 +1,92 @@
+[
+  {
+    "id": "37007105dc4f22bba697",
+    "name": "patio",
+    "friendly_name": "Patio",
+    "ip": "192.168.2.37",
+    "local_key": "3gW!Pz1iNKI9(xxe",
+    "version": "3.3",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "04083381dc4f22331b8c",
+    "name": "sala_1",
+    "friendly_name": "Sala 1",
+    "ip": "192.168.2.32",
+    "local_key": "iaq.iky`wOwCIO|i",
+    "version": "3.1",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "05237153a4cf12a08ac3",
+    "name": "sala_2",
+    "friendly_name": "Sala 2",
+    "ip": "192.168.2.26",
+    "local_key": "/X^<m>Vp/Do#E~jA",
+    "version": "3.3",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "05237153840d8eb6aa13",
+    "name": "sala_3",
+    "friendly_name": "Sala 3",
+    "ip": "192.168.2.34",
+    "local_key": "xs#^ewVtUsu[X|Fg",
+    "version": "3.3",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "37007105dc4f22bb6ea9",
+    "name": "ac_light",
+    "friendly_name": "AC Light",
+    "ip": "192.168.2.48",
+    "local_key": "_)gFpB!R]uU00es#",
+    "version": "3.3",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "052371532cf43200e548",
+    "name": "hallway_1",
+    "friendly_name": "Hallway 1",
+    "ip": "192.168.2.49",
+    "local_key": "DL)1^FaV44@9UwK.",
+    "version": "3.3",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "37007105dc4f22bba99a",
+    "name": "hallway_2",
+    "friendly_name": "Hallway 2",
+    "ip": "192.168.2.54",
+    "local_key": "g/#c=?pV.AC+P=0z",
+    "version": "3.3",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "55002573bcddc2a5d973",
+    "name": "main_closet",
+    "friendly_name": "Main Closet",
+    "ip": "192.168.2.63",
+    "local_key": "K-L(>[p?dK&5.j_9",
+    "version": "3.3",
+    "type": "bulb",
+    "enabled": true
+  },
+  {
+    "id": "ebf68d05cac56968bdnofa",
+    "name": "dinner",
+    "friendly_name": "Dinner",
+    "ip": "192.168.2.69",
+    "local_key": "4rnzp15AWWwZ:dLY",
+    "version": "3.4",
+    "type": "switch",
+    "enabled": true
+  }
+]

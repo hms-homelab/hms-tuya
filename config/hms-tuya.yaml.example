@@ -1,0 +1,22 @@
+server:
+  port: 8899
+  threads: 2
+
+mqtt:
+  broker: "192.168.2.15"
+  port: 1883
+  username: "aamat"
+  password: "exploracion"
+  client_id: "hms_tuya"
+  topic_prefix: "hms-tuya"
+
+devices_file: "devices.json"
+
+tuya:
+  poll_interval: 10
+  socket_timeout: 5
+  min_backoff: 10
+  max_backoff: 300
+  cmd_max_retries: 5
+  cmd_retry_delay: 3
+  cmd_timeout: 60
