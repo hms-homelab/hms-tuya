@@ -26,6 +26,11 @@ struct AppConfig {
     int cmd_retry_delay = 3;
     int cmd_timeout = 60;
 
+    // Tuya Cloud API (for device discovery)
+    std::string tuya_api_key;
+    std::string tuya_api_secret;
+    std::string tuya_api_region = "us";
+
     // Paths
     std::string devices_file = "devices.json";
 };
@@ -35,6 +40,7 @@ struct DeviceEntry {
     std::string name;           // short name (e.g. "patio")
     std::string friendly_name;  // display name (e.g. "Patio")
     std::string type;           // "bulb" or "switch"
+    std::string mac;            // MAC address (optional, for identification)
     bool enabled = true;
 };
 

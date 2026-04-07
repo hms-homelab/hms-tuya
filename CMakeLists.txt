@@ -16,14 +16,16 @@ endif()
 set(NANOTUYA_LOCAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../nanotuya")
 if(EXISTS "${NANOTUYA_LOCAL_PATH}/CMakeLists.txt")
     message(STATUS "Using local nanotuya from ${NANOTUYA_LOCAL_PATH}")
+    set(BUILD_WITH_CLOUD ON CACHE BOOL "Enable TuyaCloud in nanotuya" FORCE)
     add_subdirectory(${NANOTUYA_LOCAL_PATH} nanotuya)
 else()
     message(STATUS "Fetching nanotuya from GitHub")
     include(FetchContent)
     FetchContent_Declare(nanotuya
         GIT_REPOSITORY https://github.com/hms-homelab/nanotuya.git
-        GIT_TAG v1.0.0
+        GIT_TAG main
     )
+    set(BUILD_WITH_CLOUD ON CACHE BOOL "Enable TuyaCloud in nanotuya" FORCE)
     FetchContent_MakeAvailable(nanotuya)
 endif()
 
@@ -32,19 +34,35 @@ find_package(OpenSSL REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP REQUIRED jsoncpp)
 find_package(yaml-cpp REQUIRED)
+find_package(CURL REQUIRED)
 
 # Paho MQTT
 find_library(PAHO_MQTTPP3 paho-mqttpp3 REQUIRED)
 find_library(PAHO_MQTT3AS paho-mqtt3as REQUIRED)
 
-# ── Main executable ──
-add_executable(hms_tuya
+# ── Optional Drogon web UI ──
+option(BUILD_WITH_WEB "Build with Drogon web UI" ON)
+if(BUILD_WITH_WEB)
+    find_package(Drogon CONFIG REQUIRED)
+    add_definitions(-DBUILD_WITH_WEB)
+endif()
+
+# ── Source files ──
+set(HMS_TUYA_SOURCES
     src/main.cpp
     src/ConfigManager.cpp
+    src/LogBuffer.cpp
     src/bridge/DeviceWorker.cpp
     src/bridge/MqttBridge.cpp
     src/bridge/BridgeManager.cpp
 )
+
+if(BUILD_WITH_WEB)
+    list(APPEND HMS_TUYA_SOURCES src/web/ApiController.cpp)
+endif()
+
+# ── Main executable ──
+add_executable(hms_tuya ${HMS_TUYA_SOURCES})
 
 target_include_directories(hms_tuya PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -58,7 +76,12 @@ target_link_libraries(hms_tuya
     ${PAHO_MQTT3AS}
     ${JSONCPP_LIBRARIES}
     OpenSSL::Crypto
+    CURL::libcurl
 )
+
+if(BUILD_WITH_WEB)
+    target_link_libraries(hms_tuya Drogon::Drogon)
+endif()
 
 # ── Install ──
 install(TARGETS hms_tuya DESTINATION bin)

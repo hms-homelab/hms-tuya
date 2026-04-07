@@ -29,15 +29,17 @@ jobs:
       - name: Install C++ dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-            build-essential cmake \
+            build-essential cmake pkg-config \
             libssl-dev libjsoncpp-dev libyaml-cpp-dev \
             libpaho-mqtt-dev libpaho-mqttpp-dev \
+            libcurl4-openssl-dev libdrogon-dev \
+            uuid-dev libhiredis-dev libbrotli-dev zlib1g-dev \
             libgtest-dev libgmock-dev
 
       - name: Build hms-tuya
         run: |
           mkdir build && cd build
-          cmake -DHMS_TUYA_BUILD_TESTS=ON ..
+          cmake -DHMS_TUYA_BUILD_TESTS=ON -DBUILD_WITH_WEB=ON ..
           make -j$(nproc)
 
       - name: Run tests

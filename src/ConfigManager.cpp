@@ -41,6 +41,13 @@ bool ConfigManager::load(const std::string& yaml_path) {
             if (tuya["cmd_timeout"])     app_config_.cmd_timeout     = tuya["cmd_timeout"].as<int>();
         }
 
+        // Tuya Cloud section
+        if (auto cloud = root["tuya_cloud"]) {
+            if (cloud["api_key"])    app_config_.tuya_api_key    = cloud["api_key"].as<std::string>();
+            if (cloud["api_secret"]) app_config_.tuya_api_secret = cloud["api_secret"].as<std::string>();
+            if (cloud["region"])     app_config_.tuya_api_region = cloud["region"].as<std::string>();
+        }
+
         // Devices file path
         if (auto devices = root["devices_file"]) {
             app_config_.devices_file = devices.as<std::string>();
@@ -146,6 +153,7 @@ void ConfigManager::loadDevices() {
         entry.name                  = item.get("name", "").asString();
         entry.friendly_name         = item.get("friendly_name", "").asString();
         entry.type                  = item.get("type", "switch").asString();
+        entry.mac                   = item.get("mac", "").asString();
         entry.enabled               = item.get("enabled", true).asBool();
 
         if (!entry.name.empty() && !entry.tuya_config.id.empty()) {
@@ -167,6 +175,7 @@ void ConfigManager::saveDevices() {
         item["name"]          = dev.name;
         item["friendly_name"] = dev.friendly_name;
         item["type"]          = dev.type;
+        item["mac"]           = dev.mac;
         item["enabled"]       = dev.enabled;
 
         // Convert version enum back to string

@@ -1,6 +1,12 @@
 #include "ConfigManager.h"
 #include "bridge/MqttBridge.h"
 #include "bridge/BridgeManager.h"
+#include "LogBuffer.h"
+
+#ifdef BUILD_WITH_WEB
+#include "web/ApiController.h"
+#include <drogon/drogon.h>
+#endif
 
 #include <iostream>
 #include <csignal>
@@ -18,16 +24,17 @@ static void signalHandler(int signal) {
     std::cout << "Received signal " << signal << ", shutting down..." << std::endl;
     g_running = false;
     g_cv.notify_all();
+#ifdef BUILD_WITH_WEB
+    drogon::app().quit();
+#endif
 }
 
 static std::string findConfigPath(int argc, char* argv[]) {
-    // Check command line --config flag
     for (int i = 1; i < argc - 1; ++i) {
         if (std::string(argv[i]) == "--config") {
             return argv[i + 1];
         }
     }
-    // Check common paths
     const std::vector<std::string> paths = {
         "/etc/hms-tuya/hms-tuya.yaml",
         "config/hms-tuya.yaml",
@@ -75,13 +82,62 @@ int main(int argc, char* argv[]) {
     auto bridge = std::make_shared<BridgeManager>(mqtt, config);
     bridge->start();
 
-    std::cout << "hms-tuya bridge running" << std::endl;
+    LogBuffer::instance().info("bridge", "hms-tuya started");
+
+#ifdef BUILD_WITH_WEB
+    // Configure Drogon web server
+    ApiController::setBridgeManager(bridge);
+    ApiController::setConfigManager(config);
+
+    // Read index.html for SPA fallback
+    std::string static_dir = "./static/browser";
+    std::string index_html;
+    {
+        std::ifstream f(static_dir + "/index.html");
+        if (f.good()) {
+            index_html = std::string(std::istreambuf_iterator<char>(f),
+                                     std::istreambuf_iterator<char>());
+        }
+    }
+
+    // SPA fallback: return index.html for non-API 404s
+    auto spa_fallback = index_html;
+    drogon::app().setCustomErrorHandler(
+        [spa_fallback](drogon::HttpStatusCode code,
+                       const drogon::HttpRequestPtr& req) -> drogon::HttpResponsePtr {
+            if (code == drogon::k404NotFound) {
+                auto path = req->path();
+                if (path.find("/api/") == std::string::npos &&
+                    path.find("/health") == std::string::npos &&
+                    !spa_fallback.empty()) {
+                    auto resp = drogon::HttpResponse::newHttpResponse();
+                    resp->setStatusCode(drogon::k200OK);
+                    resp->setContentTypeCode(drogon::CT_TEXT_HTML);
+                    resp->setBody(spa_fallback);
+                    return resp;
+                }
+            }
+            return nullptr;  // use default error page
+        });
+
+    std::cout << "Web UI on port " << app.server_port << std::endl;
+
+    drogon::app()
+        .setLogLevel(trantor::Logger::kWarn)
+        .addListener("0.0.0.0", app.server_port)
+        .setThreadNum(app.server_threads)
+        .setDocumentRoot(static_dir)
+        .setIdleConnectionTimeout(120)
+        .run();
+#else
+    std::cout << "hms-tuya bridge running (no web UI)" << std::endl;
 
     // Block main thread until signal
     {
         std::unique_lock<std::mutex> lock(g_mutex);
         g_cv.wait(lock, [] { return !g_running.load(); });
     }
+#endif
 
     // Graceful shutdown
     std::cout << "Shutting down..." << std::endl;

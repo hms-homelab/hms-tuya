@@ -31,3 +31,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### DPS Support
 - Bulbs: switch (DP1), mode (DP2), brightness (DP3), color_temp (DP4), colour (DP5)
 - Switches: switch (DP1), countdown (DP9)
+
+## [1.1.0] - 2026-04-07
+
+### Added
+- Angular 19 web admin UI (dark theme, device management)
+- Drogon web server serving SPA on port 8899
+- REST API: 13 endpoints (devices CRUD, status, commands, logs, settings, cloud)
+- Tuya Cloud device discovery via nanotuya TuyaCloud
+- LogBuffer: thread-safe ring buffer for web log viewer
+- Cloud import: auto-discover devices from Tuya IoT Platform
+- 3-stage Dockerfile (Angular + C++ + runtime)
+- HEALTHCHECK on port 8899
+
+### Changed
+- nanotuya upgraded to v1.1.0 (adds TuyaCloud with libcurl)
+- Dockerfile now includes Angular UI build stage
+- CMakeLists.txt adds BUILD_WITH_WEB option (Drogon)
+
+### Fixed
+- MQTT topic paths: bulb -> light (matching Python bridge)
+- executeCommand: check setValue return value
+- Docker CI: missing pkg-config and libcurl in build deps
