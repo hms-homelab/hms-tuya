@@ -1,0 +1,165 @@
+name: Build, Test, and Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ── Linux Build + Docker ──────────────────────────────────────────
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── C++ Build + Tests ───────────────────────────────────────
+      - name: Install C++ dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+            build-essential cmake \
+            libssl-dev libjsoncpp-dev libyaml-cpp-dev \
+            libpaho-mqtt-dev libpaho-mqttpp-dev \
+            libgtest-dev libgmock-dev
+
+      - name: Build hms-tuya
+        run: |
+          mkdir build && cd build
+          cmake -DHMS_TUYA_BUILD_TESTS=ON ..
+          make -j$(nproc)
+
+      - name: Run tests
+        run: cd build && ./hms_tuya_tests
+
+      # ── Docker Image ────────────────────────────────────────────
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Image digest
+        if: github.event_name != 'pull_request'
+        run: echo ${{ steps.meta.outputs.digest }}
+
+      - name: Make GHCR package public
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api --method PUT \
+            orgs/${{ github.repository_owner }}/packages/container/hms-tuya \
+            -f visibility=public || echo "Could not set visibility (may need org admin token)"
+
+  # ── Windows Build ─────────────────────────────────────────────────
+  windows-build:
+    runs-on: windows-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install vcpkg dependencies
+        run: |
+          vcpkg install openssl jsoncpp yaml-cpp paho-mqttpp3 --triplet x64-windows
+
+      - name: Build hms-tuya (MSVC)
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DHMS_TUYA_BUILD_TESTS=OFF ..
+          cmake --build . --config Release --parallel
+
+      - name: Bundle release
+        run: |
+          mkdir release
+          Copy-Item build\Release\hms_tuya.exe release\
+          Get-ChildItem -Path build\Release\*.dll -ErrorAction SilentlyContinue | Copy-Item -Destination release\
+          Copy-Item config\hms-tuya.yaml.example release\
+          Copy-Item config\devices.json.example release\
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hms-tuya-windows-x64
+          path: release/
+
+  # ── GitHub Release (on tag push) ──────────────────────────────────
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-and-test, windows-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Windows artifact
+        id: download-windows
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: hms-tuya-windows-x64
+          path: windows-release/
+
+      - name: Create Windows zip
+        if: steps.download-windows.outcome == 'success'
+        run: |
+          cd windows-release
+          zip -r ../hms-tuya-windows-x64.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            hms-tuya-windows-x64.zip

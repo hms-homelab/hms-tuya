@@ -1,0 +1,13 @@
+services:
+  hms-tuya:
+    image: ghcr.io/hms-homelab/hms-tuya:latest
+    container_name: hms-tuya
+    volumes:
+      - ./config:/etc/hms-tuya
+    network_mode: host
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

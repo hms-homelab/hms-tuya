@@ -1,5 +1,6 @@
 # hms-tuya
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-%23FFDD00.svg?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/aamat09)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 C++ Tuya WiFi MQTT bridge with Home Assistant auto-discovery. Controls Tuya WiFi devices locally over the LAN. 2 MB memory.
@@ -153,6 +154,19 @@ cmake ..
 # Force GitHub fetch
 cmake .. -DNANOTUYA_LOCAL_PATH=/nonexistent
 ```
+
+## Docker
+
+```bash
+# Pull and run
+docker pull ghcr.io/hms-homelab/hms-tuya:latest
+docker run -v ./config:/etc/hms-tuya --network host ghcr.io/hms-homelab/hms-tuya:latest
+
+# Or use docker-compose
+docker compose up -d
+```
+
+Supports `linux/amd64` and `linux/arm64` (Raspberry Pi).
 
 ## Related Projects
 
