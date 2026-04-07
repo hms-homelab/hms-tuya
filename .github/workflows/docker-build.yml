@@ -114,13 +114,13 @@ jobs:
 
       - name: Install vcpkg dependencies
         run: |
-          vcpkg install openssl jsoncpp yaml-cpp paho-mqttpp3 curl --triplet x64-windows
+          vcpkg install --triplet x64-windows
 
       - name: Build hms-tuya (MSVC)
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DHMS_TUYA_BUILD_TESTS=OFF -DBUILD_WITH_WEB=OFF ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" -DHMS_TUYA_BUILD_TESTS=OFF -DBUILD_WITH_WEB=ON ..
           cmake --build . --config Release --parallel
 
       - name: Bundle release
