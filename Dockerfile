@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     libdrogon-dev \
     uuid-dev libhiredis-dev libbrotli-dev zlib1g-dev \
+    libpq-dev libmariadb-dev libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
