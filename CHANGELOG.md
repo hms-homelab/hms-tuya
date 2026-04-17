@@ -32,6 +32,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bulbs: switch (DP1), mode (DP2), brightness (DP3), color_temp (DP4), colour (DP5)
 - Switches: switch (DP1), countdown (DP9)
 
+## [1.2.1] - 2026-04-16
+
+### Fixed
+- v3.4 switch control: dinner device now responds to ON/OFF commands instantly
+- nanotuya upgraded to v1.2.1 (v3.4 CONTROL_NEW payload fix + sendReceive response handling)
+
+### Added
+- Persistent TCP connections per device (configurable via `tuya.mode: persistent|burst`)
+- Heartbeat keepalive with configurable interval (`tuya.heartbeat_interval`)
+- Auto-reconnect with exponential backoff on connection failure
+- Connection mode settings in web admin UI
+- GitHub Actions: release workflow for Linux + macOS binaries
+
+### Changed
+- Default mode is `persistent` (one long-lived TCP connection per device)
+- Settings page maps flat API response to grouped UI sections
+
 ## [1.1.0] - 2026-04-07
 
 ### Added
