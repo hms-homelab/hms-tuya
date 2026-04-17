@@ -69,9 +69,11 @@ void BridgeManager::start() {
             publishCallback(name, type, state, power_on);
         };
 
+        bool persistent = (app.mode == "persistent");
         auto worker = std::make_unique<DeviceWorker>(
-            dev, cb,
-            app.poll_interval, app.min_backoff, app.max_backoff,
+            dev, cb, persistent,
+            app.poll_interval, app.heartbeat_interval,
+            app.min_backoff, app.max_backoff,
             app.cmd_max_retries, app.cmd_retry_delay, app.cmd_timeout);
 
         worker->start();

@@ -1,0 +1,125 @@
+name: Release Binaries
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.2.0)'
+        required: true
+        default: 'v1.2.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-amd64
+            artifact: hms_tuya-linux-amd64
+            binary: hms_tuya
+            archive: tar.gz
+          - os: macos-latest
+            name: macos-arm64
+            artifact: hms_tuya-macos-arm64
+            binary: hms_tuya
+            archive: tar.gz
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ------------------ Linux ------------------
+      - name: Install deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config \
+            libssl-dev libjsoncpp-dev libyaml-cpp-dev \
+            libpaho-mqtt-dev libpaho-mqttpp-dev \
+            libcurl4-openssl-dev libdrogon-dev \
+            uuid-dev libhiredis-dev libbrotli-dev zlib1g-dev \
+            libmariadb-dev libsqlite3-dev libpq-dev
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DHMS_TUYA_BUILD_TESTS=OFF -DBUILD_WITH_WEB=ON ..
+          make -j$(nproc)
+          strip hms_tuya
+
+      # ------------------ macOS ------------------
+      - name: Install deps (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install openssl jsoncpp yaml-cpp paho-mqtt-cpp drogon
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DHMS_TUYA_BUILD_TESTS=OFF -DBUILD_WITH_WEB=ON ..
+          make -j$(sysctl -n hw.ncpu)
+          strip hms_tuya
+
+      # ------------------ Package ------------------
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp build/${{ matrix.binary }} dist/
+          cp VERSION dist/
+          [ -f README.md ] && cp README.md dist/ || true
+          [ -f LICENSE ] && cp LICENSE dist/ || true
+          cp config/hms-tuya.yaml.example dist/
+          cp config/devices.json.example dist/
+          tar -czf ${{ matrix.artifact }}.tar.gz -C dist .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.tar.gz
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p release
+          find artifacts -type f -name '*.tar.gz' -exec cp {} release/ \;
+          ls -lh release/
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }}
+          generate_release_notes: true
+          files: release/*

@@ -13,10 +13,12 @@ mqtt:
 devices_file: "devices.json"
 
 tuya:
-  poll_interval: 10
-  socket_timeout: 5
-  min_backoff: 10
-  max_backoff: 300
+  mode: "persistent"       # "persistent" (keep TCP alive) or "burst" (fresh connection per poll)
+  poll_interval: 10        # seconds between status polls
+  heartbeat_interval: 10   # seconds between heartbeats (persistent mode only)
+  socket_timeout: 5        # TCP timeout per device
+  min_backoff: 10          # initial backoff on failure (seconds)
+  max_backoff: 300         # maximum backoff (seconds)
   cmd_max_retries: 5
   cmd_retry_delay: 3
   cmd_timeout: 60

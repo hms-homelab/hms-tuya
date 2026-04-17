@@ -331,7 +331,9 @@ void ApiController::getSettings(const drogon::HttpRequestPtr& req,
     result["mqtt_password"] = "********";  // masked
     result["mqtt_client_id"] = app.mqtt_client_id;
     result["mqtt_topic_prefix"] = app.mqtt_topic_prefix;
+    result["mode"] = app.mode;
     result["poll_interval"] = app.poll_interval;
+    result["heartbeat_interval"] = app.heartbeat_interval;
     result["socket_timeout"] = app.socket_timeout;
     result["min_backoff"] = app.min_backoff;
     result["max_backoff"] = app.max_backoff;

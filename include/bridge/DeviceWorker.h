@@ -1,6 +1,7 @@
 #pragma once
 #include <nanotuya/TuyaDevice.h>
 #include <json/json.h>
+#include <memory>
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -21,7 +22,8 @@ public:
                                                const Json::Value& state, bool power_on)>;
 
     DeviceWorker(const DeviceEntry& config, PublishCallback publish_cb,
-                 int poll_interval, double min_backoff, double max_backoff,
+                 bool persistent, int poll_interval, int heartbeat_interval,
+                 double min_backoff, double max_backoff,
                  int cmd_max_retries, int cmd_retry_delay, int cmd_timeout);
     ~DeviceWorker();
 
@@ -35,9 +37,14 @@ public:
 
 private:
     void run();
+    void runPersistent();
+    void runBurst();
     bool poll();
+    bool pollPersistent();
     void drainCommands();
+    void drainCommandsPersistent();
     bool executeCommand(const Json::Value& cmd);
+    bool executeCommandPersistent(const Json::Value& cmd);
     void publishState(const Json::Value& dps);
     void publishOptimistic(const Json::Value& cmd);
 
@@ -48,9 +55,13 @@ private:
 
     DeviceEntry config_;
     PublishCallback publish_cb_;
+    bool persistent_;
 
     std::thread thread_;
     std::atomic<bool> running_{false};
+
+    // Persistent connection (owned by worker thread)
+    std::unique_ptr<nanotuya::TuyaDevice> device_;
 
     // Command queue
     struct QueuedCommand {
@@ -68,9 +79,11 @@ private:
     // Timing
     double backoff_;
     std::chrono::steady_clock::time_point next_poll_;
+    std::chrono::steady_clock::time_point next_heartbeat_;
 
     // Config
     int poll_interval_;
+    int heartbeat_interval_;
     double min_backoff_;
     double max_backoff_;
     int cmd_max_retries_;

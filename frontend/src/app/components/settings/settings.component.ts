@@ -73,6 +73,31 @@ import { ApiService } from '../../services/api.service';
           </div>
         </div>
 
+        <!-- Connection Mode Section -->
+        <div class="section">
+          <h3>Connection</h3>
+          <div class="form-row">
+            <div class="form-group" style="max-width: 200px;">
+              <label>Mode</label>
+              <select [(ngModel)]="settings.tuning.mode">
+                <option value="persistent">Persistent</option>
+                <option value="burst">Burst</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Heartbeat Interval (s)</label>
+              <input type="number" [(ngModel)]="settings.tuning.heartbeat_interval"
+                     [disabled]="settings.tuning.mode !== 'persistent'">
+            </div>
+          </div>
+          <p class="hint" *ngIf="settings.tuning.mode === 'persistent'">
+            Keeps TCP connections alive per device. Reduces latency and prevents dropped devices.
+          </p>
+          <p class="hint" *ngIf="settings.tuning.mode === 'burst'">
+            Opens a fresh TCP connection for each poll/command. Original behavior.
+          </p>
+        </div>
+
         <!-- Tuya Tuning Section -->
         <div class="section">
           <h3>Tuya Tuning</h3>
@@ -163,6 +188,11 @@ import { ApiService } from '../../services/api.service';
       font-size: 13px;
       margin-top: 12px;
     }
+    .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
   `]
 })
 export class SettingsComponent implements OnInit {
@@ -176,16 +206,32 @@ export class SettingsComponent implements OnInit {
   settings: any = {
     mqtt: { broker: '', port: 1883, username: '', password: '', client_id: '', topic_prefix: '' },
     cloud: { api_key: '', api_secret: '', region: 'us' },
-    tuning: { poll_interval: 15, socket_timeout: 5, min_backoff: 5, max_backoff: 300, cmd_max_retries: 3, cmd_retry_delay: 500 }
+    tuning: { mode: 'persistent', heartbeat_interval: 10, poll_interval: 15, socket_timeout: 5, min_backoff: 5, max_backoff: 300, cmd_max_retries: 3, cmd_retry_delay: 500 }
   };
 
   ngOnInit() {
     this.api.getSettings().subscribe({
       next: (s: any) => {
         this.settings = {
-          mqtt: { ...this.settings.mqtt, ...(s.mqtt || {}) },
+          mqtt: {
+            broker: s.mqtt_broker ?? this.settings.mqtt.broker,
+            port: s.mqtt_port ?? this.settings.mqtt.port,
+            username: s.mqtt_username ?? this.settings.mqtt.username,
+            password: s.mqtt_password ?? this.settings.mqtt.password,
+            client_id: s.mqtt_client_id ?? this.settings.mqtt.client_id,
+            topic_prefix: s.mqtt_topic_prefix ?? this.settings.mqtt.topic_prefix,
+          },
           cloud: { ...this.settings.cloud, ...(s.cloud || {}) },
-          tuning: { ...this.settings.tuning, ...(s.tuning || {}) }
+          tuning: {
+            mode: s.mode ?? this.settings.tuning.mode,
+            heartbeat_interval: s.heartbeat_interval ?? this.settings.tuning.heartbeat_interval,
+            poll_interval: s.poll_interval ?? this.settings.tuning.poll_interval,
+            socket_timeout: s.socket_timeout ?? this.settings.tuning.socket_timeout,
+            min_backoff: s.min_backoff ?? this.settings.tuning.min_backoff,
+            max_backoff: s.max_backoff ?? this.settings.tuning.max_backoff,
+            cmd_max_retries: s.cmd_max_retries ?? this.settings.tuning.cmd_max_retries,
+            cmd_retry_delay: s.cmd_retry_delay ?? this.settings.tuning.cmd_retry_delay,
+          }
         };
         this.loading.set(false);
       },

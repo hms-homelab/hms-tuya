@@ -32,13 +32,15 @@ bool ConfigManager::load(const std::string& yaml_path) {
 
         // Tuya section
         if (auto tuya = root["tuya"]) {
-            if (tuya["poll_interval"])   app_config_.poll_interval   = tuya["poll_interval"].as<int>();
-            if (tuya["socket_timeout"])  app_config_.socket_timeout  = tuya["socket_timeout"].as<int>();
-            if (tuya["min_backoff"])     app_config_.min_backoff     = tuya["min_backoff"].as<double>();
-            if (tuya["max_backoff"])     app_config_.max_backoff     = tuya["max_backoff"].as<double>();
-            if (tuya["cmd_max_retries"]) app_config_.cmd_max_retries = tuya["cmd_max_retries"].as<int>();
-            if (tuya["cmd_retry_delay"]) app_config_.cmd_retry_delay = tuya["cmd_retry_delay"].as<int>();
-            if (tuya["cmd_timeout"])     app_config_.cmd_timeout     = tuya["cmd_timeout"].as<int>();
+            if (tuya["mode"])               app_config_.mode               = tuya["mode"].as<std::string>();
+            if (tuya["poll_interval"])       app_config_.poll_interval       = tuya["poll_interval"].as<int>();
+            if (tuya["socket_timeout"])      app_config_.socket_timeout      = tuya["socket_timeout"].as<int>();
+            if (tuya["heartbeat_interval"])  app_config_.heartbeat_interval  = tuya["heartbeat_interval"].as<int>();
+            if (tuya["min_backoff"])         app_config_.min_backoff         = tuya["min_backoff"].as<double>();
+            if (tuya["max_backoff"])         app_config_.max_backoff         = tuya["max_backoff"].as<double>();
+            if (tuya["cmd_max_retries"])     app_config_.cmd_max_retries     = tuya["cmd_max_retries"].as<int>();
+            if (tuya["cmd_retry_delay"])     app_config_.cmd_retry_delay     = tuya["cmd_retry_delay"].as<int>();
+            if (tuya["cmd_timeout"])         app_config_.cmd_timeout         = tuya["cmd_timeout"].as<int>();
         }
 
         // Tuya Cloud section

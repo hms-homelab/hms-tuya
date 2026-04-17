@@ -18,8 +18,10 @@ struct AppConfig {
     std::string mqtt_topic_prefix = "tuya";
 
     // Tuya tuning
+    std::string mode = "persistent";  // "persistent" or "burst"
     int poll_interval = 10;
     int socket_timeout = 5;
+    int heartbeat_interval = 10;
     double min_backoff = 10.0;
     double max_backoff = 300.0;
     int cmd_max_retries = 5;
