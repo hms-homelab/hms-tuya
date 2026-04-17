@@ -342,6 +342,12 @@ void ApiController::getSettings(const drogon::HttpRequestPtr& req,
     result["cmd_timeout"] = app.cmd_timeout;
     result["devices_file"] = app.devices_file;
 
+    Json::Value cloud;
+    cloud["api_key"] = app.tuya_api_key.empty() ? "" : "********";
+    cloud["api_secret"] = app.tuya_api_secret.empty() ? "" : "********";
+    cloud["region"] = app.tuya_api_region;
+    result["cloud"] = cloud;
+
     callback(jsonResponse(result));
 }
 

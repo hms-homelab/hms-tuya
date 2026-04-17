@@ -15,30 +15,14 @@ permissions:
 
 jobs:
   build:
-    name: Build ${{ matrix.name }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            name: linux-amd64
-            artifact: hms_tuya-linux-amd64
-            binary: hms_tuya
-            archive: tar.gz
-          - os: macos-latest
-            name: macos-arm64
-            artifact: hms_tuya-macos-arm64
-            binary: hms_tuya
-            archive: tar.gz
-    runs-on: ${{ matrix.os }}
+    name: Build linux-amd64
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ------------------ Linux ------------------
-      - name: Install deps (Linux)
-        if: runner.os == 'Linux'
+      - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -49,46 +33,29 @@ jobs:
             uuid-dev libhiredis-dev libbrotli-dev zlib1g-dev \
             libmariadb-dev libsqlite3-dev libpq-dev
 
-      - name: Build (Linux)
-        if: runner.os == 'Linux'
+      - name: Build
         run: |
           mkdir build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release -DHMS_TUYA_BUILD_TESTS=OFF -DBUILD_WITH_WEB=ON ..
           make -j$(nproc)
           strip hms_tuya
 
-      # ------------------ macOS ------------------
-      - name: Install deps (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew update
-          brew install openssl jsoncpp yaml-cpp paho-mqtt-cpp drogon
-
-      - name: Build (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Release -DHMS_TUYA_BUILD_TESTS=OFF -DBUILD_WITH_WEB=ON ..
-          make -j$(sysctl -n hw.ncpu)
-          strip hms_tuya
-
-      # ------------------ Package ------------------
       - name: Package
         run: |
           mkdir -p dist
-          cp build/${{ matrix.binary }} dist/
+          cp build/hms_tuya dist/
           cp VERSION dist/
           [ -f README.md ] && cp README.md dist/ || true
           [ -f LICENSE ] && cp LICENSE dist/ || true
           cp config/hms-tuya.yaml.example dist/
           cp config/devices.json.example dist/
-          tar -czf ${{ matrix.artifact }}.tar.gz -C dist .
+          tar -czf hms_tuya-linux-amd64.tar.gz -C dist .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}.tar.gz
+          name: hms_tuya-linux-amd64
+          path: hms_tuya-linux-amd64.tar.gz
 
   release:
     name: Publish GitHub Release
